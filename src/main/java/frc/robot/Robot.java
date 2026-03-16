@@ -37,14 +37,11 @@ public class Robot extends TimedRobot {
 	public void robotInit() {
 
 		hardwareConfigs = new HardwareConfigs();
-		Console.logMsg("Hardware Config Done");
 		// Instantiate our RobotContainer.  This will perform all our button bindings, and put our
 		// autonomous chooser on the dashboard.
 		m_robotContainer = new RobotContainer();
 
-		Console.logMsg("Starting...");
 		CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
-		Console.logMsg("Path Planning Done");
 
 		DashboardManager.startPeriodic(this);
 	}

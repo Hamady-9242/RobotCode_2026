@@ -4,6 +4,8 @@ import java.util.function.Supplier;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -67,12 +69,13 @@ public class RobotContainer {
     private final Climber sysClimber = new Climber();
     //private final Vision s_Vision = new Vision(s_PoseEstimator);
 
+    private final UsbCamera camIntake;
+
     /* AutoChooser */
     private final SendableChooser<Command> autoChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        Console.logMsg("Robot COntainer Starting...");
         sysSwerve.setDefaultCommand(
             new SwerveCommand(
                 sysSwerve, 
@@ -84,11 +87,18 @@ public class RobotContainer {
             )
         );
 
-        Console.logMsg("Binding Buttons...");
+        try{
+            camIntake = CameraServer.startAutomaticCapture("Intake Camera", 0);
+            camIntake.setFPS(15);
+            camIntake.setResolution(128, 80);
+            camIntake.setBrightness(50);
+        } finally {
+            //Just ignore camera if it fails
+        }
+
         // Configure the button bindings
         configureButtonBindings();
         
-        Console.logMsg("Building Autos...");
         //Auto chooser
         autoChooser = AutoBuilder.buildAutoChooser("Do Nothing"); // Default auto will be `Commands.none()`
         SmartDashboard.putData("Autonmous Sequence", autoChooser);
