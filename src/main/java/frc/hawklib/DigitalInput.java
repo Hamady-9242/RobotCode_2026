@@ -12,7 +12,10 @@ public class DigitalInput extends edu.wpi.first.wpilibj.DigitalInput{
         mIsInverted = isInverted;
     }
 
-    public void configInverted(boolean isInverted) { mIsInverted = isInverted; }
+    public DigitalInput configInverted(boolean isInverted) { 
+        mIsInverted = isInverted; 
+        return this;
+    }
 
     public boolean get() { return mIsInverted ? !super.get() : super.get(); }
 }

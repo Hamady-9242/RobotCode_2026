@@ -58,10 +58,6 @@ public class DashboardSelector<Type extends Enum<Type>> implements Sendable, Aut
         DashboardManager.add(this);
     }
 
-    /**
-     * 
-     * @return
-     */
     public Type get() { return mSelectedOption; }
 
     @Override
@@ -89,9 +85,6 @@ public class DashboardSelector<Type extends Enum<Type>> implements Sendable, Aut
         SendableRegistry.remove(this);
     }
 
-    /**
-     * 
-     */
     public void update() { SendableRegistry.update(this); }
     
 }
