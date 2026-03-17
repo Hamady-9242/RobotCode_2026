@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import frc.hawklib.Utility;
 
 /**
  * A simple type-locked entry on the Network Table
@@ -27,7 +27,7 @@ public class DashboardValue<ValueType> {
     public DashboardValue(NetworkTable table, String title, Consumer<ValueType> setter, ValueType defaultValue) { this(table, title, null, setter, defaultValue); }
 
     public DashboardValue(NetworkTable table, String title, Supplier<ValueType> getter, Consumer<ValueType> setter, ValueType defaultValue) {
-        //while(!NetworkTableInstance.getDefault().isConnected());
+        Utility.waitForNetworkTableConnection();
 
         ENTRY = table.getEntry(title); 
         GETTER = getter;

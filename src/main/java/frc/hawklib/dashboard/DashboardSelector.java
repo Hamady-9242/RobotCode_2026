@@ -5,11 +5,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilderImpl;
+import frc.hawklib.Utility;
 
 /**
  * A dropdown selector preloaded with options provided through an enumeration
@@ -32,7 +32,7 @@ public class DashboardSelector<Type extends Enum<Type>> implements Sendable, Aut
      */
     public DashboardSelector(NetworkTable parentTable, String title, Type defaultOption){
         //Wait for NetworkTables to get connected
-        //while(!NetworkTableInstance.getDefault().isConnected());
+        Utility.waitForNetworkTableConnection();
 
         //Initalize values
         TABLE = parentTable.getSubTable(title);
