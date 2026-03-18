@@ -28,6 +28,7 @@ import frc.robot.subsystems.Swerve;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
+@SuppressWarnings("unused")
 public class RobotContainer {
 	public static final NetworkTable tblHawks = NetworkTableInstance.getDefault().getTable("Hawks");
     public static final NetworkTable tblSubsystems = tblHawks.getSubTable("Subsystems");
@@ -48,7 +49,7 @@ public class RobotContainer {
     private final Trigger btnDriver_HighSpeed = new Trigger(ctlDriver::getRightBumperButton);
 
     private final Trigger btnIntake = new Trigger(ctlDriver::getLeftTriggerButton);
-    private final Trigger btnShooter = new Trigger(ctlDriver::getRightTriggerButton);
+    private final Trigger btnShoot = new Trigger(ctlDriver::getRightTriggerButton);
     private final Trigger btnFlush = new Trigger(ctlDriver::getBButton);
 
     private final Trigger btnAnticlimb = new Trigger(()->ctlDriver.getPOV()==0);
@@ -103,33 +104,28 @@ public class RobotContainer {
         SmartDashboard.putData("Autonmous Sequence", autoChooser);
     }
 
-    @SuppressWarnings("unused")
     private double squareInput(double inputValue) {
         double sign = inputValue < 0.0 ? -1.0 : 1.0;
         return inputValue * inputValue * sign;
     }
 
-    @SuppressWarnings("unused")
     private double cubeInput(double inputValue) {
         return inputValue * inputValue * inputValue;
     }
 
     /**
-     * Use this method to define your button->command mappings. Buttons can be created by
-     * instantiating a {@link GenericHID} or one of its subclasses ({@link
-     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+     * Bind your triggers to their respective Commands
      */
     private void configureButtonBindings() {
         /* Driver Buttons */
         btnZeroGyro.onTrue(new InstantCommand(() -> sysSwerve.zeroHeading()));
 
-        btnShooter.whileTrue(sysShooter.cmdShoot);
-        btnIntake.whileTrue(sysShooter.cmdIntake);
-        btnFlush.whileTrue(sysShooter.cmdFlush);
+        btnShoot.whileTrue(sysShooter.shoot());
+        btnIntake.whileTrue(sysShooter.intake());
+        btnFlush.whileTrue(sysShooter.flush());
 
-        btnAnticlimb.whileTrue(sysClimber.cmdExtend);
-        btnClimb.whileTrue(sysClimber.cmdRetrack);
+        btnAnticlimb.whileTrue(sysClimber.extend());
+        btnClimb.whileTrue(sysClimber.retract());
     }
 
     /**
