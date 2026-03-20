@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Forward and 90deg"
+            "pathName": "Example Path"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Test Autos",
   "choreoAuto": false
 }

@@ -2,8 +2,12 @@ package frc.robot.subsystems;
 
 import static frc.robot.Dashboard.tblSubsystems;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.Timer;
@@ -56,6 +60,16 @@ public class Shooter extends SubsystemBase {
         new DashboardValue<Double>(tblFlushValues, "Flywheel", val -> mFlushValue_FlywheelPower = val, mFlushValue_FlywheelPower);
         new DashboardValue<Double>(tblFlushValues, "Feed", val -> mFlushValue_FeedPower = val, mFlushValue_FeedPower);
         
+        mtrFlywheel.configure(
+            new SparkMaxConfig().idleMode(IdleMode.kBrake),
+            ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters
+        );
+
+        mtrFeed.configure(
+            new SparkMaxConfig().idleMode(IdleMode.kBrake),
+            ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters
+        );
+
         setDefaultCommand(
             runOnce(this::disable)
             .andThen(idle())

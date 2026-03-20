@@ -48,8 +48,11 @@ public class SwerveCommand extends Command {
      //heading lock - forward
      /*
         rotationVal = rotationController.calculate(s_Swerve.getHeading().getRadians(), Units.degreesToRadians(0));
-        */
-        rotationVal = rotationVal * SwerveConstants.maxAngularVelocity;
+        
+        if(RobotContainer.dynamicDrive)
+            rotationVal = rotationController.calculate(sysSwerve.getHeading().getRadians(), Units.degreesToRadians(dynamicHeading));
+        else*/
+            rotationVal = rotationVal * SwerveConstants.maxAngularVelocity;
 
         /* Drive */
         sysSwerve.drive(

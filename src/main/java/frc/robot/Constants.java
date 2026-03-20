@@ -86,9 +86,9 @@ public final class Constants {
 
         //Heading PID Values 
         //FIXME: Tune heading PID
-        public static final double HeadingKP = 0.5;
+        public static final double HeadingKP = 7.0;
         public static final double HeadingKI = 0.0;
-        public static final double HeadingKD = 0;
+        public static final double HeadingKD = 0.35;
         public static final double HeadingTolerence = 0;
 
         //Motor power gain
@@ -128,7 +128,7 @@ public final class Constants {
             public static final int driveMotorID = 3;
             public static final int angleMotorID = 4;
             public static final int canCoderID = 10;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-165.0);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-167.0);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -138,7 +138,7 @@ public final class Constants {
             public static final int driveMotorID = 8;
             public static final int angleMotorID = 7;
             public static final int canCoderID = 11;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-80.0);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(-87.0);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -148,7 +148,7 @@ public final class Constants {
             public static final int driveMotorID = 1;
             public static final int angleMotorID = 2;
             public static final int canCoderID = 13;
-            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(125.0);
+            public static final Rotation2d angleOffset = Rotation2d.fromDegrees(123.0);
             public static final SwerveModuleConstants constants = 
                 new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -161,8 +161,8 @@ public final class Constants {
         public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
         //TODO: Must be tuned to specific robot
-        public static final PIDConstants translationPID = new PIDConstants(0, 0, 0);
-        public static final PIDConstants rotationPID = new PIDConstants(0, 0, 0);
+        public static final PIDConstants translationPID = new PIDConstants(0.0, 0.0, 0.0);
+        public static final PIDConstants rotationPID = new PIDConstants(5.0, 0.0, 0.1);
 
         //TODO: Must be tuned to specific robot
         public static final double ROBOT_MASS_KG = 74.088;
