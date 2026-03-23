@@ -7,6 +7,7 @@ package frc.robot;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 
 //import org.littletonrobotics.junction.LoggedRobot;
 
@@ -71,17 +72,20 @@ public class Robot extends TimedRobot {
 	/** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
 	@Override
 	public void autonomousInit() {
-		m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+		//m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
 		// schedule the autonomous command (example)
-		if (m_autonomousCommand != null) {
-			m_autonomousCommand.schedule();
-		}
+		//if (m_autonomousCommand != null) {
+		//	m_autonomousCommand.schedule();
+		//}
+		m_robotContainer.autonInit();
 	}
 
 	/** This function is called periodically during autonomous. */
 	@Override
-	public void autonomousPeriodic() {}
+	public void autonomousPeriodic() {
+		m_robotContainer.autonPeriodic();
+	}
 
 	@Override
 	public void teleopInit() {

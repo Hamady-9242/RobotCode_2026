@@ -185,7 +185,7 @@ public final class Constants {
 
     public static final class DriverConstants {
         public static final double SLOW_SPEED = 0.2;
-        public static final double STANDARD_SPEED = 0.5;
+        public static final double STANDARD_SPEED = 0.7;
         public static final double HIGH_SPEED = 1.0;
     }
 

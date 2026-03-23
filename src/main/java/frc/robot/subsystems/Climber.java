@@ -19,7 +19,7 @@ public class Climber  extends SubsystemBase{
 
     private final SparkMax mtrWinch = new SparkMax (9, MotorType.kBrushless);
 
-    private double mWinchPower = 0.5;
+    private double mWinchPower = 0.35;
     
     public Climber(){
         new DashboardValue<Double>(tblClimber, "Extend Power", val -> mWinchPower = val, mWinchPower);
