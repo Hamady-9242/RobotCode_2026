@@ -187,6 +187,8 @@ public final class Constants {
         public static final double SLOW_SPEED = 0.2;
         public static final double STANDARD_SPEED = 0.7;
         public static final double HIGH_SPEED = 1.0;
+
+        public static final double SHIMMY_PERIOD = 0.25;
     }
 
     public static final class PoseEstimator {

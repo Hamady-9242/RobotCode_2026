@@ -7,4 +7,5 @@ public class Dashboard {
     public static final NetworkTable tblHawks = NetworkTableInstance.getDefault().getTable("Hawks");
     public static final NetworkTable tblSubsystems = tblHawks.getSubTable("Subsystems");
     public static final NetworkTable tblDrivingOptions = tblHawks.getSubTable("Driving Options");
+    public static final NetworkTable tblAutonomous = tblHawks.getSubTable("Autonomous");
 }

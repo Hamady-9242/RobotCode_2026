@@ -20,7 +20,7 @@ public class SwerveCommand extends Command {
     private PIDController rotationController;
     
 
-    public SwerveCommand(Swerve sysSwerve, DoubleSupplier translationSup, DoubleSupplier strafeSup, DoubleSupplier rotationSup, BooleanSupplier robotCentricSup, DoubleSupplier dynamicHeadingSup) {
+    public SwerveCommand(Swerve sysSwerve, DoubleSupplier translationSup, DoubleSupplier strafeSup, DoubleSupplier rotationSup, BooleanSupplier robotCentricSup) {
         this.sysSwerve = sysSwerve;
         addRequirements(sysSwerve);
 
@@ -32,7 +32,6 @@ public class SwerveCommand extends Command {
         this.strafeSup = strafeSup;
         this.rotationSup = rotationSup;
         this.robotCentricSup = robotCentricSup;
-        this.dynamicHeadingSup = dynamicHeadingSup;
     }
 
     @Override
@@ -43,7 +42,7 @@ public class SwerveCommand extends Command {
         double strafeVal = strafeSup.getAsDouble();
         double rotationVal = rotationSup.getAsDouble();
         //TODO: Add code for dynamic heading- the supplier is a placeholder right now
-        double dynamicHeading = dynamicHeadingSup.getAsDouble();
+        //double dynamicHeading = dynamicHeadingSup.getAsDouble();
         
      //heading lock - forward
      /*

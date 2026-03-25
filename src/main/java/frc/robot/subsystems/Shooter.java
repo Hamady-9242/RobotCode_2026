@@ -31,7 +31,7 @@ public class Shooter extends SubsystemBase {
     private double mIntakeValue_FeedPower = -0.75;
 
     private double mShootValue_FlywheelPower = 0.75;
-    private double mShootValue_FeedPower = 1.0;
+    private double mShootValue_FeedPower = 0.75;
     private double mShootValue_Delay = 0.25;
 
     private double mFlushValue_FlywheelPower = -1.0;
@@ -61,12 +61,12 @@ public class Shooter extends SubsystemBase {
         new DashboardValue<Double>(tblFlushValues, "Feed", val -> mFlushValue_FeedPower = val, mFlushValue_FeedPower);
         
         mtrFlywheel.configure(
-            new SparkMaxConfig().idleMode(IdleMode.kBrake),
+            new SparkMaxConfig().idleMode(IdleMode.kCoast),
             ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters
         );
 
         mtrFeed.configure(
-            new SparkMaxConfig().idleMode(IdleMode.kBrake),
+            new SparkMaxConfig().idleMode(IdleMode.kCoast),
             ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters
         );
 
@@ -91,6 +91,10 @@ public class Shooter extends SubsystemBase {
     public void setFeed(double power) {
         mtrFeed.set(power);
     }
+
+    public void disableFlywheel() { mtrFlywheel.disable(); }
+
+    public void disableFeed() { mtrFeed.disable(); }
 
     /**
      * Stop all motors in the system

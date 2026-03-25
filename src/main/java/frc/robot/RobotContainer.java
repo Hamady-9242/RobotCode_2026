@@ -5,8 +5,6 @@ import static frc.robot.Dashboard.tblHawks;
 
 import java.util.function.Supplier;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.Timer;
@@ -14,13 +12,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.hawklib.dashboard.DashboardSelector;
 import frc.hawklib.dashboard.DashboardValue;
 import frc.hawklib.hid.XboxController;
 import frc.robot.Constants.DriverConstants;
 import frc.robot.commands.SwerveCommand;
+import frc.robot.commands.autonoumous.DoNothingSequence;
+import frc.robot.commands.autonoumous.JustShootSequence;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.PoseEstimator;
 import frc.robot.subsystems.Shooter;
@@ -94,15 +93,14 @@ public class RobotContainer {
     private final Trigger btnDriver_LowSpeed = new Trigger(ctlDriver::getLeftTriggerButton);
     private final Trigger btnDriver_HighSpeed = new Trigger(ctlDriver::getRightTriggerButton);
 
-    private final Trigger btnIntake = new Trigger(ctlDriver::getRightBumperButton)
-                                            .or(ctlOperator::getRightBumperButton);
-    private final Trigger btnShoot = new Trigger(ctlDriver::getLeftBumperButton)
-                                            .or(ctlOperator::getLeftBumperButton);
+    private final Trigger btnIntake = new Trigger(ctlOperator::getRightBumperButton);
+    private final Trigger btnShoot = new Trigger(ctlOperator::getLeftBumperButton);
+    private final Trigger btnShimmy = new Trigger(ctlOperator::getLeftTriggerButton);
 
     //Operator Button Mapping
     private final Trigger btnAnticlimb = new Trigger(() -> (ctlOperator.getPOV() == 0));
     private final Trigger btnClimb = new Trigger (() -> (ctlOperator.getPOV() == 180));
-    private final Trigger btnFlush = new Trigger(() -> ctlDriver.getBButton() || ctlOperator.getBButton());
+    private final Trigger btnFlush = new Trigger(ctlOperator::getBButton);
 
     //Driver Axis Mapping
     private final Supplier<Double> axsDriver_Translation = () -> dshInputScale.get().scale(ctlDriver.getLeftY());
@@ -117,8 +115,18 @@ public class RobotContainer {
 
     private final UsbCamera camIntake;
 
-	private Timer tmrAuton = new Timer();
+	private final Timer tmrAuton = new Timer();
+    private final Timer tmrShimmy = new Timer();
     private AutonomousSequence mSelectedAuton;
+
+    private final SwerveCommand cmdDrive_Stop = new SwerveCommand(sysSwerve, ()->0.0, ()->0.0, ()->0.0, ()->true);
+    private final SwerveCommand cmdDrive_Forward = new SwerveCommand(sysSwerve, ()->1.0, ()->0.0, ()->0.0, ()->true);
+    private final SwerveCommand cmdDrive_Backward = new SwerveCommand(sysSwerve, ()->-1.0, ()->0.0, ()->0.0, ()->true);
+
+    private final SendableChooser<Command> chsAuton = new SendableChooser<Command>();
+
+    private final DoNothingSequence autDoNothing = new DoNothingSequence(sysSwerve, sysShooter, sysClimber);
+    private final JustShootSequence autJustShoot = new JustShootSequence(sysSwerve, sysShooter, sysClimber);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -128,8 +136,7 @@ public class RobotContainer {
                 () -> axsDriver_Translation.get() * getSpeedMult(), 
                 () -> axsDriver_Strafe.get() * getSpeedMult(), 
                 () -> axsDriver_Rotation.get() * getSpeedMult(), 
-                () -> dshDriveStyle.get() == DriveStyle.ROBOT_CENTRIC,
-                () -> 0.0 // Dynamic heading placeholder
+                () -> dshDriveStyle.get() == DriveStyle.ROBOT_CENTRIC
             )
         );
 
@@ -150,17 +157,13 @@ public class RobotContainer {
         //autoChooser = AutoBuilder.buildAutoChooser("Do Nothing"); // Default auto will be `Commands.none()`
         //SmartDashboard.putData("Autonmous Sequence", autoChooser);
 
+        chsAuton.setDefaultOption("Do Nothing", autDoNothing);
+        chsAuton.addOption("Just Shoot", autJustShoot);
+
+        SmartDashboard.putData("Auto Chooser", chsAuton);
+
         new DashboardValue<Boolean>(tblHawks, "Low Speed", () -> btnDriver_LowSpeed.getAsBoolean() && !btnDriver_HighSpeed.getAsBoolean());
         new DashboardValue<Boolean>(tblHawks, "High Speed", () -> btnDriver_HighSpeed.getAsBoolean());
-    }
-
-    private double squareInput(double inputValue) {
-        double sign = inputValue < 0.0 ? -1.0 : 1.0;
-        return inputValue * inputValue * sign;
-    }
-
-    private double cubeInput(double inputValue) {
-        return inputValue * inputValue * inputValue;
     }
 
     /**
@@ -177,6 +180,16 @@ public class RobotContainer {
         btnAnticlimb.whileTrue(sysClimber.extend());
         btnClimb.whileTrue(sysClimber.retract());
         btnFlush.whileTrue(sysShooter.flush());
+
+        btnShimmy.onTrue(new InstantCommand(() -> tmrShimmy.restart()))
+                .whileTrue(new Command() {
+                    @Override public void execute() {
+                        if(tmrShimmy.get() % DriverConstants.SHIMMY_PERIOD * 2.0 < DriverConstants.SHIMMY_PERIOD)
+                            cmdDrive_Forward.schedule();
+                        else
+                            cmdDrive_Backward.schedule();
+            }})
+            .onFalse(cmdDrive_Stop);
     }
 
     private double getSpeedMult() {
@@ -191,20 +204,25 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         // An ExampleCommand will run in autonomous
         //return autoChooser.getSelected();
-        return null;
+        return chsAuton.getSelected();
     }
 
     public void autonInit() {
         mSelectedAuton = dshAutonomousSelector.get();
         tmrAuton.restart();
 
-        new SwerveCommand(sysSwerve, ()->0, ()->0, ()->0, ()->false, ()->0).schedule();
+        cmdDrive_Stop.schedule();
     }
 
-    @SuppressWarnings("incomplete-switch")
     public void autonPeriodic() {
         switch(mSelectedAuton){
             case JUST_SHOOT:
+                if(tmrAuton.get() > 1.25 && tmrAuton.get() % 0.5 < 0.25)
+                    cmdDrive_Forward.schedule();
+                else
+                    cmdDrive_Backward.schedule();
+                
+
                 if(tmrAuton.get() < 1.0) {
                     sysShooter.setFlywheel(0.7);
                     sysShooter.setFeed(0.0);
