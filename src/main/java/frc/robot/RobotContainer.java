@@ -1,22 +1,20 @@
 package frc.robot;
 
 import static frc.robot.Dashboard.tblDrivingOptions;
-import static frc.robot.Dashboard.tblHawks;
 
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.hawklib.dashboard.DashboardSelector;
-import frc.hawklib.dashboard.DashboardValue;
 import frc.hawklib.hid.XboxController;
 import frc.robot.Constants.DriverConstants;
+import frc.robot.commands.ShimmyCommand;
 import frc.robot.commands.SwerveCommand;
 import frc.robot.commands.autonoumous.DoNothingSequence;
 import frc.robot.commands.autonoumous.JustShootSequence;
@@ -31,7 +29,6 @@ import frc.robot.subsystems.Swerve;
  * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
-@SuppressWarnings("unused")
 public class RobotContainer {
 
     //Selector Options
@@ -39,44 +36,28 @@ public class RobotContainer {
         FIELD_CENTRIC("Field Centric"),
         ROBOT_CENTRIC("Robot Centric");
 
+        private static final String TITLE = "Drive Styler";
         private final String LABEL;
         private DriveStyle(String label) { LABEL = label; }
 
         public String toString() { return LABEL; }
     }
 
-    private enum InputScale {
-        NONE("No Scaling") {
-            public double scale(double inputValue) { return inputValue; }
-        }, SQUARED("Squared") {
-            public double scale(double inputValue) { return inputValue * inputValue * (inputValue < 0.0 ? -1.0 : 1.0); }
-        }, CUBED("Cubed") {
-            public double scale(double inputValue) { return inputValue * inputValue * inputValue; }
-        };
+    private enum InputCurve {
+        NONE("None"), 
+        SQUARED("Squared"), 
+        CUBED("Cubed");
 
+        private static final String TITLE = "Input Curve";
         private final String LABEL;
-        private InputScale(String label) { LABEL = label; }
+        private InputCurve(String label) { LABEL = label; }
         
-        public String toString() { return LABEL; }
-
-        public abstract double scale(double inputValue);
-    }
-
-    private enum AutonomousSequence {
-        DO_NOTHING("Do Nothing"),
-        JUST_SHOOT("Just Shoot");
-
-        private final String LABEL;
-        private AutonomousSequence(String label) { LABEL = label; }
-
         public String toString() { return LABEL; }
     }
 
     /* Selectors */
-    //private final SendableChooser<Command> autoChooser;
-    private final DashboardSelector<DriveStyle> dshDriveStyle = new DashboardSelector<DriveStyle>(tblDrivingOptions, "Drive Style", DriveStyle.ROBOT_CENTRIC);
-    private final DashboardSelector<InputScale> dshInputScale = new DashboardSelector<InputScale>(tblDrivingOptions, "Input Scale", InputScale.NONE);
-    private final DashboardSelector<AutonomousSequence> dshAutonomousSelector = new DashboardSelector<AutonomousSequence>(tblHawks, "Autonomous Sequence", AutonomousSequence.DO_NOTHING);
+    private final DashboardSelector<DriveStyle> dshDriveStyle = new DashboardSelector<DriveStyle>(tblDrivingOptions, DriveStyle.TITLE, DriveStyle.ROBOT_CENTRIC);
+    private final DashboardSelector<InputCurve> dshInputCurve = new DashboardSelector<InputCurve>(tblDrivingOptions, InputCurve.TITLE, InputCurve.NONE);
 
     /* Controllers */
     private final XboxController ctlDriver = new XboxController(0)
@@ -93,19 +74,20 @@ public class RobotContainer {
     private final Trigger btnDriver_LowSpeed = new Trigger(ctlDriver::getLeftTriggerButton);
     private final Trigger btnDriver_HighSpeed = new Trigger(ctlDriver::getRightTriggerButton);
 
-    private final Trigger btnIntake = new Trigger(ctlOperator::getRightBumperButton);
-    private final Trigger btnShoot = new Trigger(ctlOperator::getLeftBumperButton);
-    private final Trigger btnShimmy = new Trigger(ctlOperator::getLeftTriggerButton);
+    //Driver Axis Mapping
+    private final DoubleSupplier axsDriveTranslation = () -> curveInput(ctlDriver.getLeftY()) * getSpeedMult();
+    private final DoubleSupplier axsDriveStrafe = () -> curveInput(ctlDriver.getLeftX()) * getSpeedMult();
+    private final DoubleSupplier axsDriveRotation = () -> curveInput(ctlDriver.getRightX()) * getSpeedMult();
 
     //Operator Button Mapping
-    private final Trigger btnAnticlimb = new Trigger(() -> (ctlOperator.getPOV() == 0));
-    private final Trigger btnClimb = new Trigger (() -> (ctlOperator.getPOV() == 180));
+    private final Trigger btnIntake = new Trigger(ctlOperator::getRightBumperButton);
+    private final Trigger btnShoot = new Trigger(ctlOperator::getLeftBumperButton);
     private final Trigger btnFlush = new Trigger(ctlOperator::getBButton);
 
-    //Driver Axis Mapping
-    private final Supplier<Double> axsDriver_Translation = () -> dshInputScale.get().scale(ctlDriver.getLeftY());
-    private final Supplier<Double> axsDriver_Strafe = () -> dshInputScale.get().scale(ctlDriver.getLeftX());
-    private final Supplier<Double> axsDriver_Rotation = () -> dshInputScale.get().scale(ctlDriver.getRightX());
+    private final Trigger btnShimmy = new Trigger(ctlOperator::getLeftTriggerButton);
+
+    private final Trigger btnAnticlimb = new Trigger(() -> (ctlOperator.getPOV() == 0));
+    private final Trigger btnClimb = new Trigger (() -> (ctlOperator.getPOV() == 180));
 
     /* Subsystems */
     private final PoseEstimator s_PoseEstimator = new PoseEstimator();
@@ -113,29 +95,28 @@ public class RobotContainer {
     private final Shooter sysShooter = new Shooter();
     private final Climber sysClimber = new Climber();
 
+    /* Camera */
     private final UsbCamera camIntake;
 
-	private final Timer tmrAuton = new Timer();
-    private final Timer tmrShimmy = new Timer();
-    private AutonomousSequence mSelectedAuton;
-
+    /* Basic Swerve Commands */
     private final SwerveCommand cmdDrive_Stop = new SwerveCommand(sysSwerve, ()->0.0, ()->0.0, ()->0.0, ()->true);
-    private final SwerveCommand cmdDrive_Forward = new SwerveCommand(sysSwerve, ()->1.0, ()->0.0, ()->0.0, ()->true);
-    private final SwerveCommand cmdDrive_Backward = new SwerveCommand(sysSwerve, ()->-1.0, ()->0.0, ()->0.0, ()->true);
+    private final ShimmyCommand cmdDrive_Shimmy = new ShimmyCommand(sysSwerve);
 
-    private final SendableChooser<Command> chsAuton = new SendableChooser<Command>();
-
+    /* Autonomous Sequences */
     private final DoNothingSequence autDoNothing = new DoNothingSequence(sysSwerve, sysShooter, sysClimber);
     private final JustShootSequence autJustShoot = new JustShootSequence(sysSwerve, sysShooter, sysClimber);
+
+    /* Autonomous Chooser */
+    private final SendableChooser<Command> chsAutonomousSequence = new SendableChooser<Command>();
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         sysSwerve.setDefaultCommand(
             new SwerveCommand(
                 sysSwerve, 
-                () -> axsDriver_Translation.get() * getSpeedMult(), 
-                () -> axsDriver_Strafe.get() * getSpeedMult(), 
-                () -> axsDriver_Rotation.get() * getSpeedMult(), 
+                axsDriveTranslation, 
+                axsDriveStrafe, 
+                axsDriveRotation, 
                 () -> dshDriveStyle.get() == DriveStyle.ROBOT_CENTRIC
             )
         );
@@ -152,18 +133,11 @@ public class RobotContainer {
 
         // Configure the button bindings
         configureButtonBindings();
-        
-        //Auto chooser
-        //autoChooser = AutoBuilder.buildAutoChooser("Do Nothing"); // Default auto will be `Commands.none()`
-        //SmartDashboard.putData("Autonmous Sequence", autoChooser);
 
-        chsAuton.setDefaultOption("Do Nothing", autDoNothing);
-        chsAuton.addOption("Just Shoot", autJustShoot);
-
-        SmartDashboard.putData("Auto Chooser", chsAuton);
-
-        new DashboardValue<Boolean>(tblHawks, "Low Speed", () -> btnDriver_LowSpeed.getAsBoolean() && !btnDriver_HighSpeed.getAsBoolean());
-        new DashboardValue<Boolean>(tblHawks, "High Speed", () -> btnDriver_HighSpeed.getAsBoolean());
+        /* Add options to Autonomous Sequence choose */
+        chsAutonomousSequence.setDefaultOption("Do Nothing", autDoNothing);
+        chsAutonomousSequence.addOption("Just Shoot", autJustShoot);
+        SmartDashboard.putData("Autonomous Sequence", chsAutonomousSequence);
     }
 
     /**
@@ -173,23 +147,26 @@ public class RobotContainer {
         /* Driver Buttons */
         btnZeroGyro.onTrue(new InstantCommand(() -> sysSwerve.zeroHeading()));
 
+        // Operator Buttons
         btnIntake.whileTrue(sysShooter.intake());
         btnShoot.whileTrue(sysShooter.shoot());
-        //    .whileTrue(new SwerveCommand(sysSwerve, () -> 0.0, () -> 0.0, () -> 0.0, () -> false, () -> 0.0));
 
         btnAnticlimb.whileTrue(sysClimber.extend());
         btnClimb.whileTrue(sysClimber.retract());
         btnFlush.whileTrue(sysShooter.flush());
 
-        btnShimmy.onTrue(new InstantCommand(() -> tmrShimmy.restart()))
-                .whileTrue(new Command() {
-                    @Override public void execute() {
-                        if(tmrShimmy.get() % DriverConstants.SHIMMY_PERIOD * 2.0 < DriverConstants.SHIMMY_PERIOD)
-                            cmdDrive_Forward.schedule();
-                        else
-                            cmdDrive_Backward.schedule();
-            }})
+        btnShimmy.whileTrue(cmdDrive_Shimmy)
             .onFalse(cmdDrive_Stop);
+    }
+
+    private double curveInput(double inputValue) {
+        InputCurve selectedCurve = dshInputCurve.get();
+        if(selectedCurve == InputCurve.NONE)
+            return inputValue;
+        else if(selectedCurve == InputCurve.SQUARED)
+            return inputValue * inputValue * (inputValue < 0.0 ? -1.0 : 1.0);
+        else 
+            return inputValue * inputValue * inputValue;
     }
 
     private double getSpeedMult() {
@@ -202,38 +179,6 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // An ExampleCommand will run in autonomous
-        //return autoChooser.getSelected();
-        return chsAuton.getSelected();
-    }
-
-    public void autonInit() {
-        mSelectedAuton = dshAutonomousSelector.get();
-        tmrAuton.restart();
-
-        cmdDrive_Stop.schedule();
-    }
-
-    public void autonPeriodic() {
-        switch(mSelectedAuton){
-            case JUST_SHOOT:
-                if(tmrAuton.get() > 1.25 && tmrAuton.get() % 0.5 < 0.25)
-                    cmdDrive_Forward.schedule();
-                else
-                    cmdDrive_Backward.schedule();
-                
-
-                if(tmrAuton.get() < 1.0) {
-                    sysShooter.setFlywheel(0.7);
-                    sysShooter.setFeed(0.0);
-                } else {
-                    sysShooter.setFeed(1.0);
-                }
-                break;
-            default:
-                sysShooter.disable();
-                sysClimber.disable();
-                break;
-        }
+        return chsAutonomousSequence.getSelected();
     }
 }

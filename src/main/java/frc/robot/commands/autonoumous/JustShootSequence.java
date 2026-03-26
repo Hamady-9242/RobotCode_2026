@@ -2,13 +2,10 @@ package frc.robot.commands.autonoumous;
 
 import static frc.robot.Dashboard.tblAutonomous;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.hawklib.dashboard.DashboardValue;
-import frc.robot.Constants;
-import frc.robot.Constants.DriverConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Swerve;

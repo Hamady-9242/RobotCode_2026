@@ -15,7 +15,6 @@ public class SwerveCommand extends Command {
     private DoubleSupplier translationSup;
     private DoubleSupplier strafeSup;
     private DoubleSupplier rotationSup;
-    private DoubleSupplier dynamicHeadingSup;
     private BooleanSupplier robotCentricSup;
     private PIDController rotationController;
     
@@ -35,23 +34,14 @@ public class SwerveCommand extends Command {
     }
 
     @Override
-    @SuppressWarnings("unused")
     public void execute() {
         /* Get Values, Deadband, Dampen */
         double translationVal = translationSup.getAsDouble();
         double strafeVal = strafeSup.getAsDouble();
         double rotationVal = rotationSup.getAsDouble();
-        //TODO: Add code for dynamic heading- the supplier is a placeholder right now
-        //double dynamicHeading = dynamicHeadingSup.getAsDouble();
-        
-     //heading lock - forward
-     /*
-        rotationVal = rotationController.calculate(s_Swerve.getHeading().getRadians(), Units.degreesToRadians(0));
-        
-        if(RobotContainer.dynamicDrive)
-            rotationVal = rotationController.calculate(sysSwerve.getHeading().getRadians(), Units.degreesToRadians(dynamicHeading));
-        else*/
-            rotationVal = rotationVal * SwerveConstants.maxAngularVelocity;
+
+        //rotationVal = rotationController.calculate(sysSwerve.getHeading().getRadians(), Units.degreesToRadians(dynamicHeading));
+        rotationVal = rotationVal * SwerveConstants.maxAngularVelocity;
 
         /* Drive */
         sysSwerve.drive(
