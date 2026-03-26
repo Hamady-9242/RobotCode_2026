@@ -36,7 +36,7 @@ public class RobotContainer {
         FIELD_CENTRIC("Field Centric"),
         ROBOT_CENTRIC("Robot Centric");
 
-        private static final String TITLE = "Drive Styler";
+        private static final String TITLE = "Drive Style";
         private final String LABEL;
         private DriveStyle(String label) { LABEL = label; }
 
