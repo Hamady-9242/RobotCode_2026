@@ -6,6 +6,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.hawklib.dashboard.DashboardValue;
+import frc.robot.commands.ShimmyCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Swerve;
@@ -22,12 +23,16 @@ public class JustShootSequence extends Command {
 
     private final NetworkTable tblAutonomous_JustShoot = tblAutonomous.getSubTable("Just Shoot");
 
+    private final ShimmyCommand cmdDrive_Shimmy;
+
     public JustShootSequence(Swerve sysSwerve, Shooter sysShooter, Climber sysClimber) {
         setName("Autonomous Sequence [Just Shoot]");
         this.sysSwerve = sysSwerve;
         this.sysShooter = sysShooter;
         this.sysClimber = sysClimber;
         addRequirements(sysSwerve, sysShooter, sysClimber);
+
+        cmdDrive_Shimmy = new ShimmyCommand(sysSwerve);
 
         new DashboardValue<Double>(tblAutonomous_JustShoot, "Flywheel Power", val -> mFlywheelPower = val, mFlywheelPower);
         new DashboardValue<Double>(tblAutonomous_JustShoot, "Feed Power", val -> mFeedPower = val, mFeedPower);
@@ -40,6 +45,7 @@ public class JustShootSequence extends Command {
         sysClimber.disable();
 
         tmrSequence.restart();
+        cmdDrive_Shimmy.initialize();
     }
 
     @Override
@@ -52,11 +58,15 @@ public class JustShootSequence extends Command {
         else
             sysSwerve.disable();
 */
+
         sysShooter.setFlywheel(mFlywheelPower);
 
-        if(tmrSequence.get() < 0.5) 
+        if(tmrSequence.get() < 0.5) {
             sysShooter.disableFeed();
-        else
+            sysSwerve.disable();
+        } else {
             sysShooter.setFeed(mFeedPower);
+            cmdDrive_Shimmy.execute();
+        }
     }
 }

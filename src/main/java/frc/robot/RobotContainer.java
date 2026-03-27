@@ -155,8 +155,8 @@ public class RobotContainer {
         btnClimb.whileTrue(sysClimber.retract());
         btnFlush.whileTrue(sysShooter.flush());
 
-        btnShimmy.whileTrue(cmdDrive_Shimmy)
-            .onFalse(cmdDrive_Stop);
+        btnShimmy.whileTrue(cmdDrive_Shimmy);
+            //.onFalse(cmdDrive_Stop);
     }
 
     private double curveInput(double inputValue) {
